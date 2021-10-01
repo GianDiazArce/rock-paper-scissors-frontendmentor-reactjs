@@ -4,8 +4,8 @@ This is a solution to the [Rock, Paper, Scissors challenge on Frontend Mentor](h
 
 ### Links
 
--   Solution URL: [Solution URL here](https://giandiazarce.github.io/rock-paper-scissors-frontendmentor-reactjs)
--   Live Site URL: [Live site URL here](https://your-live-site-url.com)
+-   Solution URL: [Solution URL here](https://www.frontendmentor.io/solutions/rockpaperscissorsfrontendmentorreactjs-cYnOjIRf8)
+-   Live Site URL: [Live site URL here](https://giandiazarce.github.io/rock-paper-scissors-frontendmentor-reactjs)
 
 ## My process
 
