@@ -191,11 +191,13 @@ export const HomePage = () => {
           <Modal>
             <ModalTitle>Rules</ModalTitle>
             <ModalFigure>
-              <ModalImage src="./assets/images/image-rules.svg" />
+              <ModalImage
+                src={`${process.env.PUBLIC_URL}/assets/images/image-rules.svg`}
+              />
             </ModalFigure>
             <ModalClose
               onClick={closeRulesModal}
-              src="./assets/images/icon-close.svg"
+              src={`${process.env.PUBLIC_URL}/assets/images/icon-close.svg`}
             />
           </Modal>
         </RulesModal>

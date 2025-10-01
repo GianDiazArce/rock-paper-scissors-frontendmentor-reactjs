@@ -85,7 +85,7 @@ export const HandButton = (props: HandButtonProps) => {
                     onClick={props.onClick}
                 >
                     <img
-                        src={`./assets/images/icon-${props.name}.svg`}
+                        src={`${process.env.PUBLIC_URL}/assets/images/icon-${props.name}.svg`}
                         alt=""
                     />
                 </Hand>

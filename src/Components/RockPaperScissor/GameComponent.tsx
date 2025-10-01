@@ -4,6 +4,8 @@ import { GameContext } from "../../context/gameContext";
 import { HandButton } from "../GameButton/HandButton";
 import ResultComponent from "./ResultComponent";
 
+const BG = `${process.env.PUBLIC_URL}/assets/images/bg-triangle.svg`;
+
 const Container = styled.div`
     width: 80%;
     @media (max-width: 500px) {
@@ -25,7 +27,7 @@ const HandsContainer = styled.div`
     gap: 50px;
     padding-top: 2em;
     z-index: 1;
-    background-image: url("./assets/images/bg-triangle.svg");
+    background-image: url(${BG});
     background-repeat: no-repeat;
     background-position: center;
     /* background-size: contain; */

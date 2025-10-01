@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { HandButton } from "../GameButton/HandButton";
 import { useOnlineGame } from "../../hook/useOnlineGame";
 import ResultComponent from "../RockPaperScissor/ResultComponent";
+const BG = `${process.env.PUBLIC_URL}/assets/images/bg-triangle.svg`;
 
 const Container = styled.div`
   width: 80%;
@@ -25,7 +26,7 @@ const HandsContainer = styled.div`
   gap: 50px;
   padding-top: 2em;
   z-index: 1;
-  background-image: url("./assets/images/bg-triangle.svg");
+  background-image: url(${BG});
   background-repeat: no-repeat;
   background-position: center;
   @media (max-width: 500px) {
