@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { colores } from "../colors/colores";
 import { HeaderComponent } from "../Components/Header/HeaderComponent";
-import { GameComponent } from "../Components/RockPaperScissor/GameComponent";
 import OnlineGameComponent from "../Components/OnlinePanel/OnlinePanel";
+import { GameComponent } from "../Components/RockPaperScissor/GameComponent";
+import { GameContext } from "../context/gameContext";
+import { GameModeTabs } from "../Components/Gamemode";
+import { Button } from "../Components/ui";
 
 const Container = styled.div`
   width: 100vw;
@@ -31,38 +34,6 @@ const Container = styled.div`
   @media (max-width: 500px) {
     justify-content: flex-start;
     gap: 1em;
-  }
-`;
-
-const Button = styled.button`
-  position: absolute;
-  bottom: 20px;
-  right: 25px;
-  background-color: inherit;
-  color: #fff;
-  opacity: 0.8;
-  padding: 7px 30px;
-  border: 1px solid #fff;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-
-  &:hover {
-    opacity: 1;
-  }
-  &:active {
-    opacity: 0.8;
-  }
-
-  @media (max-width: 500px) {
-    position: relative;
-    bottom: 0;
-    right: 0;
-    margin-top: auto;
-    margin-bottom: auto;
-    height: 40px;
-    width: 120px;
-    font-size: 1em;
   }
 `;
 
@@ -142,10 +113,8 @@ const ModalClose = styled.img`
 `;
 
 export const HomePage = () => {
-  /* <img src="./assets/images/image-rules.svg" /> */
-
   const [rulesModal, setRulesModal] = useState(false);
-  const [mode, setMode] = useState<"local" | "online">("local");
+  const { gamemode, setGameMode } = useContext(GameContext);
 
   const btnRules = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     setRulesModal(!rulesModal);
@@ -160,31 +129,15 @@ export const HomePage = () => {
   return (
     <Container>
       <HeaderComponent />
-      {/* Simple Toggle */}
-      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-        <button
-          onClick={() => setMode("local")}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 6,
-            opacity: mode === "local" ? 1 : 0.6,
-          }}
-        >
-          Local
-        </button>
-        <button
-          onClick={() => setMode("online")}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 6,
-            opacity: mode === "online" ? 1 : 0.6,
-          }}
-        >
-          Online
-        </button>
-      </div>
 
-      {mode === "local" ? <GameComponent /> : <OnlineGameComponent />}
+      {/* Toggle Local/Online */}
+      <GameModeTabs />
+
+      {gamemode === "local" ? (
+        <GameComponent />
+      ) : (
+        <OnlineGameComponent onBackToLocal={() => setGameMode("local")} />
+      )}
 
       {rulesModal && (
         <RulesModal>

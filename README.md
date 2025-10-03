@@ -17,6 +17,16 @@ This is a solution to the [Rock, Paper, Scissors challenge on Frontend Mentor](h
 -   CSS Grid
 -   [React](https://reactjs.org/) - JS library
 -   [Styled Components](https://styled-components.com/) - For styles
+-   Socket.IO Client  
+
+## ⚙️ Environment Variables
+
+The frontend uses `.env` files to know where the backend is:
+
+**`.env.development`**
+```env
+REACT_APP_WS_URL=http://localhost:3001
+```
 
 ## Available Scripts
 

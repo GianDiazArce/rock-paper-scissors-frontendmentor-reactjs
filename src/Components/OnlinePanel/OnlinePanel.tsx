@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { HandButton } from "../GameButton/HandButton";
 import { useOnlineGame } from "../../hook/useOnlineGame";
 import ResultComponent from "../RockPaperScissor/ResultComponent";
+import { Badge } from "./Badge";
+import { GameContext } from "../../context/gameContext";
+import { ButtonInverted } from "../ui";
 const BG = `${process.env.PUBLIC_URL}/assets/images/bg-triangle.svg`;
 
 const Container = styled.div`
@@ -101,31 +104,48 @@ const PlayAgainBtn = styled.button`
   }
 `;
 
-export default function OnlineGameComponent() {
+export default function OnlineGameComponent({
+  onBackToLocal,
+}: {
+  onBackToLocal?: () => void;
+}) {
   const {
     status,
     matchId,
     lastResult,
     myId,
+    myPendingMove,
+    scores,
+    targetWins,
+    seriesWinner,
     findMatch,
     cancelFind,
     pickMove,
     rematch,
   } = useOnlineGame();
 
-  const youPicked = lastResult
-    ? lastResult.a.socketId === myId
-      ? lastResult.a.move
-      : lastResult.b.move
-    : undefined;
-  const oppPicked = lastResult
-    ? lastResult.a.socketId === myId
-      ? lastResult.b.move
-      : lastResult.a.move
-    : undefined;
+  const { changeOnlineScore } = useContext(GameContext);
 
-  const winnerLabel = lastResult
-    ? lastResult.result === "draw"
+  // Elecciones a mostrar según estado
+  const youPicked = useMemo(() => {
+    if (status === "waiting" && myPendingMove) return myPendingMove; // ✅ tu mano ya jugada
+    if (!lastResult) return undefined;
+    return lastResult.a.socketId === myId
+      ? lastResult.a.move
+      : lastResult.b.move;
+  }, [status, myPendingMove, lastResult, myId]);
+
+  const oppPicked = useMemo(() => {
+    if (status === "waiting") return undefined; // ✅ rival aún no jugó (o no sabemos)
+    if (!lastResult) return undefined;
+    return lastResult.a.socketId === myId
+      ? lastResult.b.move
+      : lastResult.a.move;
+  }, [status, lastResult, myId]);
+
+  const winnerLabel =
+    lastResult &&
+    (lastResult.result === "draw"
       ? "draw"
       : lastResult.result === "a"
       ? lastResult.a.socketId === myId
@@ -133,18 +153,34 @@ export default function OnlineGameComponent() {
         : "lose"
       : lastResult.b.socketId === myId
       ? "win"
-      : "lose"
-    : "";
+      : "lose");
 
-  // Estados:
-  // idle -> botones buscar/cancelar
-  // searching -> boton cancelar y triángulo con manos para elegir cuando entre al match
-  // inMatch -> mostrar botones de jugada
-  // waiting -> esperando rival
-  // showingResult -> mostrar resultado y botón rematch
+  // marcador serie
+  const myScore = (myId && scores?.[myId]) || 0;
+  const oppId = lastResult
+    ? lastResult.a.socketId === myId
+      ? lastResult.b.socketId
+      : lastResult.a.socketId
+    : undefined;
+  const oppScore = (oppId && scores?.[oppId]) || 0;
+  const bestOf = targetWins * 2 - 1;
+  useEffect(() => {
+    changeOnlineScore(myScore, oppScore);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myScore, oppScore]);
 
+  // Texto de badge por estado
+  const badgeText =
+    status === "waiting"
+      ? "Esperando a tu oponente…"
+      : status === "rematchWaiting"
+      ? "Revancha enviada. Esperando al rival…"
+      : status === "rematchOffered"
+      ? "Tu rival ofreció revancha"
+      : "";
+
+  // Lobby
   if (!matchId) {
-    // Lobby para buscar partida
     return (
       <Container>
         <div
@@ -157,12 +193,12 @@ export default function OnlineGameComponent() {
           }}
         >
           <div>
-            Estado: <b>{status}</b>
+            Status: <b>{status}</b>
           </div>
           {status !== "searching" ? (
-            <button onClick={findMatch}>Buscar partida</button>
+            <ButtonInverted onClick={findMatch}>Find Match</ButtonInverted>
           ) : (
-            <button onClick={cancelFind}>Cancelar</button>
+            <ButtonInverted onClick={cancelFind}>Cancel</ButtonInverted>
           )}
         </div>
       </Container>
@@ -174,6 +210,7 @@ export default function OnlineGameComponent() {
       {/* En match */}
       {status === "inMatch" ? (
         <HandsContainer>
+          {!!badgeText && <Badge text={badgeText} />}
           <HandButton name="paper" onClick={() => pickMove("paper")} />
           <HandButton name="rock" onClick={() => pickMove("rock")} />
           <HandButton name="scissors" onClick={() => pickMove("scissors")} />
@@ -183,27 +220,69 @@ export default function OnlineGameComponent() {
           <GamePick>
             <GamePickTitle>You Picked</GamePickTitle>
             <div className={winnerLabel === "win" ? "winner" : ""}>
-              <HandButton name={(youPicked as any) || "rock"} />
+              <HandButton name={youPicked || "rock"} />
             </div>
           </GamePick>
 
           <ResultComponent waitBeforeShow={400}>
             <ResultContainer>
-              <h2>You {winnerLabel || (status === "waiting" ? "..." : "")}</h2>
-              {status === "showingResult" ? (
-                <PlayAgainBtn onClick={() => rematch()}>
-                  Play Again
-                </PlayAgainBtn>
-              ) : (
-                <div style={{ opacity: 0.8 }}>Esperando a tu oponente…</div>
+              <h2>
+                {status === "matchOver"
+                  ? seriesWinner === myId
+                    ? "You win the series!"
+                    : "You lose the series"
+                  : `You ${winnerLabel || (status === "waiting" ? "..." : "")}`}
+              </h2>
+
+              <div style={{ fontSize: 14, opacity: 0.9 }}>
+                Score: You {myScore} — {oppScore} Opponent (best of {bestOf})
+              </div>
+
+              {status === "matchOver" && (
+                <>
+                  <PlayAgainBtn onClick={() => rematch()}>Rematch</PlayAgainBtn>
+                  {onBackToLocal && (
+                    <PlayAgainBtn onClick={onBackToLocal}>
+                      Back to local
+                    </PlayAgainBtn>
+                  )}
+                </>
               )}
+
+              {status === "rematchWaiting" && (
+                <div style={{ opacity: 0.9 }}>
+                  Rematch sent. Waiting opponent…
+                </div>
+              )}
+
+              {status === "rematchOffered" && (
+                <>
+                  <div style={{ opacity: 0.9, marginBottom: 8 }}>
+                    Opponent offered a rematch. Accept?
+                  </div>
+                  <PlayAgainBtn onClick={() => rematch()}>
+                    Accept rematch
+                  </PlayAgainBtn>
+                </>
+              )}
+
+              {status !== "matchOver" &&
+                status !== "rematchWaiting" &&
+                status !== "rematchOffered" &&
+                status !== "showingResult" && (
+                  <div style={{ opacity: 0.8 }}>Esperando a tu oponente…</div>
+                )}
             </ResultContainer>
           </ResultComponent>
 
           <GamePick>
-            <GamePickTitle>Opponent Picked</GamePickTitle>
+            <GamePickTitle>
+              {oppPicked ? "Opponent Picked" : "Opponent is picking..."}
+            </GamePickTitle>
             <div className={winnerLabel === "lose" ? "winner" : ""}>
-              <HandButton name={(oppPicked as any) || "rock"} />
+              {oppPicked ? (
+                <HandButton name={(oppPicked as any) || "rock"} />
+              ) : null}
             </div>
           </GamePick>
         </GameContainer>
